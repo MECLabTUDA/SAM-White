@@ -36,7 +36,8 @@ The simplest way to install all dependencies is by using [Anaconda](https://cond
 
 For more information about our experiments and ablations, please read the following paper:
 ```
-Ranem, A., Babendererde, N., Frisch Y., Krumb, H. J., Fuchs, M., & Mukhopadhyay, A. (2023). Exploring sam ablations for enhancing medical segmentation in radiology and pathology. arXiv preprint arXiv:2310.00504.
+Ranem, A., Babendererde, N., Frisch Y., Krumb, H. J., Fuchs, M., & Mukhopadhyay, A. (2023).
+Exploring sam ablations for enhancing medical segmentation in radiology and pathology. arXiv preprint arXiv:2310.00504.
 ```
 
 ## Citations
@@ -44,7 +45,8 @@ If you are using our work or code base for your article, please cite the followi
 ```
 @article{ranem2023exploring,
   title={Exploring sam ablations for enhancing medical segmentation in radiology and pathology},
-  author={Ranem, Amin and Babendererde, Niklas and Frisch, Yannik and Krumb, Henry John and Fuchs, Moritz and Mukhopadhyay, Anirban},
+  author={Ranem, Amin and Babendererde, Niklas and Frisch, Yannik and Krumb, Henry John
+          and Fuchs, Moritz and Mukhopadhyay, Anirban},
   journal={arXiv preprint arXiv:2310.00504},
   year={2023}
 }
