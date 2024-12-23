@@ -9,14 +9,14 @@ from importlib import reload
 device = 0
 nr_samples = 0
 bbox = True # False
-jitter_bbox = 0.0 # Any value > 0 please, so the box will be enlarged
+jitter_bbox = 0.25 # Any value > 0 please, so the box will be enlarged
 neg_samples = False # False
 save_steps = 50
 nr_epochs = 75
 
 # -- Set only one of those and if one is set, nr_samples and neg_samples won't be considered -- #
 centroid_of_gt = False# True
-center_of_bbox = True # True
+center_of_bbox = False # True
 quarter_four_points = False # True
 
 # -- Train only segmentation head of SAM -- #

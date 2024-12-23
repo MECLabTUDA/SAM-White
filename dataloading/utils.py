@@ -140,6 +140,8 @@ def load_npzfile(path, nr_samples, jitter=0., use_only_centroid_of_gt=False, use
     This function loads a single npz file and returns the values.
     """
     vol = np.load(path)
+    if "original_size" not in vol:
+        print(path)
     orig_sizes = [vol['original_size']]
     input_sizes = [vol['input_size']]
     neg_samples_gt, samples_gt, bboxs_gt = list(), list(), list()

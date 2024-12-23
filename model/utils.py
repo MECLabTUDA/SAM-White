@@ -43,7 +43,7 @@ def get_model_size(model):
 def get_one_hot(targets, nb_classes):
     res = np.eye(nb_classes)[np.array(targets).reshape(-1)]
     res = torch.from_numpy(res)
-    return res.reshape(list(targets.shape)+[nb_classes]).permute(0, 3, 1, 2)
+    return res.reshape([1] + list(targets.shape)+[nb_classes]).permute(0, 3, 1, 2)
 
 def get_mask_from_bbox_coord(coords, shape=(1, 256, 256)):
     r"""
@@ -94,42 +94,21 @@ def plot_slice_with_samples_bboxs_png(slice, samples, neg_samples, bboxs, out, p
                 pass
                 #png[0, 0] = [255, 0, 0]
     
-    # Build png image
-    png = copy.deepcopy(slice)
-
-    # Make dots for neg_samples red
-    if plot_neg:
-        for sample in neg_samples:
-            try:
-                cv2.circle(png, [int(sample[1]), int(sample[0])], 2, [255, 0, 0], 2)
-
-            except IndexError:
-                pass
-                # png[0, 0] = [255, 0, 0]
-
     # Make dots for samples green
     for sample in samples:
         try:
-            cv2.circle(png, [int(sample[1]), int(sample[0])], 2, [0, 255, 0], 2)
+            png[int(sample[0]), int(sample[1])] = [0, 255, 0]
         except IndexError:
             pass
-            # png[0, 0] = [0, 255, 0]
+            #png[0, 0] = [0, 255, 0]
 
     # Make lines for bounding box green
-    if use_bbox:  # <-- It is 0 if it is not predicted/present
+    if use_bbox: # <-- It is 0 if it is not predicted/present
         for bbox in bboxs:
-            if len(bbox) != 0:
-                start_point = (
-                    int(bbox[0]),
-                    int(bbox[2]),
-                )  # represents the top left corner of rectangle (X1, Y1)
-                end_point = (
-                    int(bbox[1]),
-                    int(bbox[3]),
-                )  # represents the bottom right corner of rectangle (X2, Y2)
-                cv2.rectangle(
-                    png, start_point, end_point, color=(0, 0, 255), thickness=2
-                )
+             if len(bbox) != 0:
+                start_point = (int(bbox[0]), int(bbox[2]))  # represents the top left corner of rectangle (X1, Y1)
+                end_point = (int(bbox[1]), int(bbox[3]))    # represents the bottom right corner of rectangle (X2, Y2)
+                cv2.rectangle(png, start_point, end_point, color=(0,0,255), thickness=2)
     
     # Store the image
     io.imsave(out, png, check_contrast=False)

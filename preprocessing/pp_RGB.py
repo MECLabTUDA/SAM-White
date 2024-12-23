@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import sys, os
+sys.path.append(os.path.dirname(__file__) + "/..")
 
 import numpy as np
 from tqdm import tqdm
@@ -15,11 +16,11 @@ join = os.path.join
 # Set seeds for numpy, random and pytorch
 set_all_seeds(3299)
 
-tasks = ["Task900_BCSS"]
-model_types = ['vit_b', 'vit_h', 'vit_l']
-checkpoints = ['/media/aranem_locale/AR_subs_exps/SAM_white/checkpoints/sam_vit_b_01ec64.pth',
-               '/media/aranem_locale/AR_subs_exps/SAM_white/checkpoints/sam_vit_h_4b8939.pth',
-               '/media/aranem_locale/AR_subs_exps/SAM_white/checkpoints/sam_vit_l_0b3195.pth']
+tasks = ["Task300_KvasirSEG"]
+model_types = ['vit_b']#, 'vit_h', 'vit_l']
+checkpoints = ['checkpoints/sam_vit_b_01ec64.pth',
+               'checkpoints/sam_vit_h_4b8939.pth',
+               'checkpoints/sam_vit_l_0b3195.pth']
 device = 'cuda:0'
 
 # def preprocessing function
@@ -48,12 +49,18 @@ def preprocess_rgb(gt_path, nii_path, gt_name, image_name, label_id, image_size,
     z_index, _, _ = np.where(gt_data>0) if np.sum(gt_data)>0 else np.where(gt_data==0)  # Also allow empty GTs
     z_min, z_max = np.min(z_index), np.max(z_index)
 
+    #print(gt_data.shape, image_data_pre.shape)
+    #print(z_min, z_max)
+    z_min = 0
+    z_max = 1
+
     for i in range(z_min, z_max):
-        gt_slice_i = gt_data[i,:,:]
+        gt_slice_i = gt_data[:,:,i]
         gt_slice_i = transform.resize(gt_slice_i, (image_size, image_size), order=0, preserve_range=True, mode='constant', anti_aliasing=True)
         # if np.sum(gt_slice_i)>100:
         # resize img_slice_i to 256x256
-        img_slice_i = transform.resize(image_data_pre[:,i,:,:], (3, image_size, image_size), order=3, preserve_range=True, mode='constant', anti_aliasing=True).transpose(1, 2, 0).astype(np.uint8)
+
+        img_slice_i = image_data_pre[:,:,i,:]#transform.resize(image_data_pre[:,i,:,:], (3, image_size, image_size), order=3, preserve_range=True, mode='constant', anti_aliasing=True).transpose(1, 2, 0).astype(np.uint8)
 
         # NOTE: Since RGB, we expect three channels
         assert img_slice_i.shape[2]==3, 'image should be 3 channels'
@@ -61,10 +68,12 @@ def preprocess_rgb(gt_path, nii_path, gt_name, image_name, label_id, image_size,
         imgs.append(img_slice_i)
         # assert np.sum(gt_slice_i)>100, 'ground truth should have more than 100 pixels'
         gts.append(gt_slice_i)
+
         if sam_model is not None:
             sam_transform = ResizeLongestSide(sam_model.image_encoder.img_size)
             resize_img = sam_transform.apply_image(img_slice_i)
             original_size = img_slice_i.shape[:2]
+            #print(original_size)
             # resized_shapes.append(resize_img.shape[:2])
             resize_img_tensor = torch.as_tensor(resize_img.transpose(2, 0, 1)).contiguous()[None,:,:,:].to(device)
             input_size = tuple(resize_img.shape[-2:])
@@ -83,14 +92,17 @@ def preprocess_rgb(gt_path, nii_path, gt_name, image_name, label_id, image_size,
         return image_data_, imgs, gts
 
 
+Set = "Ts"
+
+
 # -- Do preprocessing here-- #
 for task in tasks:
     for model_type, checkpoint in zip(model_types,checkpoints):
         # set up the parser
         parser = argparse.ArgumentParser(description='preprocess non-CT images')
-        parser.add_argument('-i', '--nii_path', type=str, default=f'/media/aranem_locale/AR_subs_exps/SAM_white/data/{task}/imagesTr', help='path to the nii images')
-        parser.add_argument('-gt', '--gt_path', type=str, default=f'/media/aranem_locale/AR_subs_exps/SAM_white/data/{task}/labelsTr', help='path to the ground truth',)
-        parser.add_argument('-o', '--npz_path', type=str, default=f'/media/aranem_locale/AR_subs_exps/SAM_white/preprocessed_data/{task}/{model_type}/Tr', help='path to save the npz files')
+        parser.add_argument('-i', '--nii_path', type=str, default=f'data/{task}/images{Set}', help='path to the nii images')
+        parser.add_argument('-gt', '--gt_path', type=str, default=f'data/{task}/labels{Set}', help='path to the ground truth',)
+        parser.add_argument('-o', '--npz_path', type=str, default=f'preprocessed_data/{task}/{model_type}/{Set}', help='path to save the npz files')
 
         parser.add_argument('--image_size', type=int, default=256, help='image size')
         parser.add_argument('--modality', type=str, default='MRI', help='modality')

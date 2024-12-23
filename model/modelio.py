@@ -4,6 +4,8 @@ import functools, inspect, torch
 """
     Extracted from VoxelMorph Framework
 """
+
+
 def store_config_args(func):
     """
     Class-method decorator that saves every argument provided to the
@@ -11,7 +13,9 @@ def store_config_args(func):
     model loading - see LoadableModel.
     """
 
-    attrs, varargs, varkw, defaults = inspect.getargspec(func)
+    attrs, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = (
+        inspect.getfullargspec(func)
+    )
 
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -32,6 +36,7 @@ def store_config_args(func):
                 self.config[attr] = val
 
         return func(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -50,9 +55,11 @@ class LoadableModel(nn.Module):
     # LoadableModel subclass has provided an internal config parameter
     # either manually or via store_config_args
     def __init__(self, *args, **kwargs):
-        if not hasattr(self, 'config'):
-            raise RuntimeError('models that inherit from LoadableModel must decorate the '
-                               'constructor with @store_config_args')
+        if not hasattr(self, "config"):
+            raise RuntimeError(
+                "models that inherit from LoadableModel must decorate the "
+                "constructor with @store_config_args"
+            )
         super().__init__(*args, **kwargs)
 
     def save(self, path):
@@ -61,17 +68,17 @@ class LoadableModel(nn.Module):
         """
         # don't save the transformer_grid buffers - see SpatialTransformer doc for more info
         sd = self.state_dict().copy()
-        grid_buffers = [key for key in sd.keys() if key.endswith('.grid')]
+        grid_buffers = [key for key in sd.keys() if key.endswith(".grid")]
         for key in grid_buffers:
             sd.pop(key)
-        torch.save({'config': self.config, 'model_state': sd}, path)
+        torch.save({"config": self.config, "model_state": sd}, path)
 
     @classmethod
     def load(cls, path, device):
         """
         Load a python model configuration and weights.
         """
-        checkpoint = torch.load(path, map_location=torch.device(device))
-        model = cls(**checkpoint['config'])
-        model.load_state_dict(checkpoint['model_state'], strict=False)
+        checkpoint = torch.load(path, map_location=torch.device(device), weights_only=True)
+        model = cls(**checkpoint["config"])
+        model.load_state_dict(checkpoint["model_state"], strict=False)
         return model
